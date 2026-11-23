@@ -14,6 +14,8 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
       - name: Bundle the face-point library so auto-detect works offline
         run: curl -fsSL -o app/src/main/assets/clmtrackr.min.js https://cdn.jsdelivr.net/npm/clmtrackr@1.1.2/build/clmtrackr.min.js
       - name: Build APK
