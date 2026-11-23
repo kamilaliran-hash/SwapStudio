@@ -36,10 +36,20 @@ jobs:
         run: |
           cp app/src/main/assets/index.html desktop/web/index.html
           curl -fsSL -o desktop/web/clmtrackr.min.js https://cdn.jsdelivr.net/npm/clmtrackr@1.1.2/build/clmtrackr.min.js
-      - name: Build EXE
+      - name: Embed icon + manifest
+        run: |
+          python3 desktop/tools/make_syso.py desktop/SwapStudio.ico desktop/rsrc_windows_amd64.syso
+          python3 desktop/tools/make_syso.py desktop/SwapStudio.ico installer/rsrc_windows_amd64.syso
+      - name: Build SwapStudio.exe
         working-directory: desktop
         run: GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -H windowsgui" -o SwapStudio.exe .
+      - name: Build SwapStudio-Setup.exe (installer)
+        run: |
+          mkdir -p installer/payload && cp desktop/SwapStudio.exe installer/payload/
+          cd installer && GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -H windowsgui" -o SwapStudio-Setup.exe .
       - uses: actions/upload-artifact@v4
         with:
           name: SwapStudio-windows
-          path: desktop/SwapStudio.exe
+          path: |
+            desktop/SwapStudio.exe
+            installer/SwapStudio-Setup.exe
