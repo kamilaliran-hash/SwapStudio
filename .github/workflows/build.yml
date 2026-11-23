@@ -1,0 +1,45 @@
+name: Build SwapStudio (APK + EXE)
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Bundle the face-point library so auto-detect works offline
+        run: curl -fsSL -o app/src/main/assets/clmtrackr.min.js https://cdn.jsdelivr.net/npm/clmtrackr@1.1.2/build/clmtrackr.min.js
+      - name: Build APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SwapStudio-android
+          path: app/build/outputs/apk/release/*.apk
+
+  windows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Bundle web app + face-point library
+        run: |
+          cp app/src/main/assets/index.html desktop/web/index.html
+          curl -fsSL -o desktop/web/clmtrackr.min.js https://cdn.jsdelivr.net/npm/clmtrackr@1.1.2/build/clmtrackr.min.js
+      - name: Build EXE
+        working-directory: desktop
+        run: GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -H windowsgui" -o SwapStudio.exe .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SwapStudio-windows
+          path: desktop/SwapStudio.exe
